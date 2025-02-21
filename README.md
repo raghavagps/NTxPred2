@@ -19,20 +19,28 @@ ntxpred2 -h
 
 Standalone version of NTxPred2 is written in python3 and the following libraries are necessary for a successful run:
 
+- Dependencies:
+  - python=3.10.7
+  - pytorch
+  - esm=2.0.1
+
 - scikit-learn: scikit-learn (sklearn) is a an open-source machine learning library. You can install it using pip (Python’s package installer). Open your terminal and type:
 ```
-  pip install scikit-learn==1.6.1
+  pip install scikit-learn==1.5.2
 ```
 - Pandas
+```
+  pip install pandas==1.5.3
+```
 - Numpy
 The libraries pandas and numpy are automatically installed with the scikit-learn library.
 - PyTorch: PyTorch is an open-source machine learning library. You can install it using pip (Python’s package installer). Open your terminal and type:
 ```
-!pip install torch==2.6.0
+!pip install torch==2.1.0
 ```
 - Transformers: The Transformers library provides state-of-the-art machine learning models like ESM. Install it with:
 ```
-!pip install transformers==4.48.3
+!pip install transformers==4.34.0
 ```
 - joblib
 ```
@@ -40,12 +48,19 @@ The libraries pandas and numpy are automatically installed with the scikit-learn
 ```
 - onnxruntime
 ```
-!pip install onnxruntime==1.20.1
+!pip install onnxruntime==1.15.1
 ```
 
-Alternatively, usera can download all the required libraries using requirements.txt file. Open your terminal and type:
+## Install using environment.yml
+
+1. Create a new Conda environment from the environment.yml file:
+
 ```
-!pip install -r requirements.txt
+conda env create -f environment.yml
+```
+2. Activate the newly created environment:
+```
+conda activate NTxPred2
 ```
 
 # Important Note
