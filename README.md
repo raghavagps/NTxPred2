@@ -31,7 +31,7 @@ pip install ntxpred2
 ```
 To check available options, type:
 ```bash
-ntxpred2.py -h
+ntxpred2 -h
 ```
 
 ### 🔹 Standalone Installation
@@ -169,7 +169,7 @@ pip install ntxpred2
 ```
 Check options:
 ```bash
-ntxpred2.py -h
+ntxpred2 -h
 ```
 
 ---
