@@ -19,6 +19,8 @@ It employs large language model word embeddings as features for predicting neuro
 **Rathore et al.** _A large language model for predicting neurotoxic peptides and neurotoxins._ **#Journal Name#**
 
 ---
+### 🖼️ Image Representation
+![NTxPred2 Workflow](https://webs.iiitd.edu.in/raghava/ntxpred2/download/NTXPred_flowchart.png)
 
 ## 🛠️ Installation
 
