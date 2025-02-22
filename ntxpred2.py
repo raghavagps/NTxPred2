@@ -45,7 +45,12 @@ args = parser.parse_args()
 
 nf_path = os.path.dirname(__file__)
 
-###################################Model Calling##########################################
+from tqdm import tqdm  
+import urllib.request
+import zipfile
+import os
+
+################################### Model Calling ##########################################
 MODEL_URL = "https://webs.iiitd.edu.in/raghava/ntxpred2/download/Model.zip"
 
 # Define the correct directory where `python_scripts` is located
@@ -64,8 +69,10 @@ if not os.path.exists(MODEL_DIR):
         def download_with_progress(url, filename):
             with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading") as t:
                 def reporthook(block_num, block_size, total_size):
-                    t.total = total_size
+                    if t.total is None:
+                        t.total = total_size
                     t.update(block_size)
+
                 urllib.request.urlretrieve(url, filename, reporthook)
 
         # Download the ZIP file with progress bar
@@ -90,7 +97,6 @@ else:
     print("Model folder already exists in python_scripts. Skipping download.")
     print('#################################################################')
 
-# Function to check the sequence residue
 # Function to check the sequence residue
 def readseq(file):
     with open(file) as f:
