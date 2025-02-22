@@ -22,6 +22,8 @@ import pathlib
 import shutil
 import zipfile
 import urllib.request
+from tqdm.auto import tqdm
+import tqdm
 
 warnings.filterwarnings('ignore')
 parser = argparse.ArgumentParser(description='Please provide following arguments. Please make the suitable changes in the envfile provided in the folder.') 
@@ -44,23 +46,35 @@ args = parser.parse_args()
 nf_path = os.path.dirname(__file__)
 
 ###################################Model Calling##########################################
-
 MODEL_URL = "https://webs.iiitd.edu.in/raghava/ntxpred2/download/Model.zip"
-ZIP_PATH = os.path.join(os.path.dirname(__file__), "Model.zip")
-EXTRACT_PATH = os.path.dirname(__file__)  # Extract in the same directory
 
-# Check if the Model folder exists
-if not os.path.exists(os.path.join(EXTRACT_PATH, "Model")):
+# Define the correct directory where `python_scripts` is located
+SCRIPT_DIR = os.path.dirname(__file__)  # Directory of ntxpred2.py
+MODEL_DIR = os.path.join(SCRIPT_DIR, "Model")
+ZIP_PATH = os.path.join(SCRIPT_DIR, "Model.zip")
+
+# Check if the Model folder exists inside python_scripts
+if not os.path.exists(MODEL_DIR):
+    print('##############################')
     print("Downloading the model files...")
+    print('##############################')
 
     try:
-        # Download the ZIP file
-        urllib.request.urlretrieve(MODEL_URL, ZIP_PATH)
-        print("Download complete. Extracting files...")
+        # Function to show progress bar while downloading
+        def download_with_progress(url, filename):
+            with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading") as t:
+                def reporthook(block_num, block_size, total_size):
+                    t.total = total_size
+                    t.update(block_size)
+                urllib.request.urlretrieve(url, filename, reporthook)
 
-        # Extract the ZIP file in the same directory
+        # Download the ZIP file with progress bar
+        download_with_progress(MODEL_URL, ZIP_PATH)
+        print("\nDownload complete. Extracting files...")
+
+        # Extract the ZIP file into `python_scripts`
         with zipfile.ZipFile(ZIP_PATH, "r") as zip_ref:
-            zip_ref.extractall(EXTRACT_PATH)
+            zip_ref.extractall(SCRIPT_DIR)
 
         print("Extraction complete. Removing ZIP file...")
 
@@ -72,9 +86,11 @@ if not os.path.exists(os.path.join(EXTRACT_PATH, "Model")):
         print(f"Error downloading or extracting model: {e}")
         raise
 else:
-    print("Model folder already exists. Skipping download.")
+    print('#################################################################')
+    print("Model folder already exists in python_scripts. Skipping download.")
+    print('#################################################################')
 
-
+# Function to check the sequence residue
 # Function to check the sequence residue
 def readseq(file):
     with open(file) as f:
@@ -259,7 +275,7 @@ class ProteinDataset(Dataset):
 
 def gen_emb(seq, output, batch_size=4096, seq_length=1500, repr_layers=[30]):
     # Load the tokenizer and model
-    save_path = "Model/saved_esm2_t30_model"
+    save_path = f"{nf_path}/Model/saved_esm2_t30_model"
     tokenizer = AutoTokenizer.from_pretrained(save_path)
     model = EsmModel.from_pretrained(save_path)
 
@@ -636,7 +652,7 @@ if Job == 1:
             print('\n======= You are using the Prediction module of NTxPred2. Your results will be stored in file: 'f"{wd}/{result_filename}"' =====\n')
             print('==== Predicting Neurotoxic Activity using ESM2-t30 model (peptide dataset): Processing sequences please wait ...')
             # Load the tokenizer and model
-            model_save_path = "Model/Peptide/saved_model_t30"
+            model_save_path = f"{nf_path}/Model/Peptide/saved_model_t30"
             tokenizer = AutoTokenizer.from_pretrained(model_save_path)
             model = EsmForSequenceClassification.from_pretrained(model_save_path)
             model.eval()
@@ -663,14 +679,14 @@ if Job == 1:
             print('\n======= You are using the Prediction module of NTxPred2. Your results will be stored in file: 'f"{wd}/{result_filename}"' =====\n')
             print('==== Predicting Neurotoxic Activity using ET model with ESM2-t30 embeddings as features (protein dataset): Processing sequences please wait ...')
             #seq = seq.iloc[:, 0].tolist()  # Converts the first column to a list
-            extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/Sequence_1', f'{wd}/esm2-t30_embeddings')
+            extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/Sequence_1', f'{wd}/esm2-t30_embeddings')
             df = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
             df1 = pd.DataFrame(seqid)
             df1.rename(columns={0: "Entry_ID"}, inplace=True)
             df1["Entry_ID"] = df1["Entry_ID"].str.replace(r"^>", "", regex=True)
             df11 = df1.merge(df, on="Entry_ID", how="inner")
             df11.to_csv(f'{wd}/embeddings_in_order.csv')
-            pred_prot_emb(f'{wd}/embeddings_in_order.csv', "Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+            pred_prot_emb(f'{wd}/embeddings_in_order.csv', f"{nf_path}/Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
             class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
             df2 = pd.DataFrame(seq)
             df3 = pd.read_csv(f'{wd}/seq.out')
@@ -699,14 +715,14 @@ if Job == 1:
             print('\n======= You are using the Prediction module of NTxPred2. Your results will be stored in file: 'f"{wd}/{result_filename}"' =====\n')
             print('==== Predicting Neurotoxic Activity using ET model with ESM2-t30 embeddings as features (combined dataset): Processing sequences please wait ...')
             #seq = seq.iloc[:, 0].tolist()  # Converts the first column to a list
-            extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/Sequence_1', f'{wd}/esm2-t30_embeddings')
+            extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/Sequence_1', f'{wd}/esm2-t30_embeddings')
             df = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
             df1 = pd.DataFrame(seqid)
             df1.rename(columns={0: "Entry_ID"}, inplace=True)
             df1["Entry_ID"] = df1["Entry_ID"].str.replace(r"^>", "", regex=True)
             df11 = df1.merge(df, on="Entry_ID", how="inner")
             df11.to_csv(f'{wd}/embeddings_in_order.csv')
-            pred_comb_emb(f'{wd}/embeddings_in_order.csv', "Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+            pred_comb_emb(f'{wd}/embeddings_in_order.csv', f"{nf_path}/Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
             class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
             df2 = pd.DataFrame(seq)
             df3 = pd.read_csv(f'{wd}/seq.out')
@@ -739,7 +755,7 @@ elif Job == 2:
         print('\n======= You are using the Protein Scanning module of NTxPred2. Your results will be stored in file: 'f"{wd}/{result_filename}"' =====\n')
         print('==== Scanning through ESM2-t30 model (peptide dataset): Processing sequences please wait ...')
         # Load the tokenizer and model
-        model_save_path = "Model/Peptide/saved_model_t30"
+        model_save_path = f"{nf_path}/Model/Peptide/saved_model_t30"
         tokenizer = AutoTokenizer.from_pretrained(model_save_path)
         model = EsmForSequenceClassification.from_pretrained(model_save_path)
         model.eval()
@@ -774,12 +790,12 @@ elif Job == 2:
             df_1 = seq_pattern(seq,seqid,Win_len)
             seq = df_1["Seq"].tolist()
             convert_fasta(df_1, wd, 'seq_pattern.fasta')
-            extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/seq_pattern.fasta', f'{wd}/esm2-t30_embeddings')
+            extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/seq_pattern.fasta', f'{wd}/esm2-t30_embeddings')
             df = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
             df = df.rename(columns={"Entry_ID": "Seq"})
             df11 = df_1.merge(df, on="Seq", how="inner")
             df11.to_csv(f'{wd}/pattern_embeddings_in_order.csv')
-            pred_prot_emb(f'{wd}/pattern_embeddings_in_order.csv', "Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+            pred_prot_emb(f'{wd}/pattern_embeddings_in_order.csv', f"{nf_path}/Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
             class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
             df3 = pd.read_csv(f'{wd}/seq.out')
             df4 = pd.concat([df_1,df3],axis=1)
@@ -812,12 +828,12 @@ elif Job == 2:
         df_1 = seq_pattern(seq,seqid,Win_len)
         seq = df_1["Seq"].tolist()
         convert_fasta(df_1, wd, 'seq_pattern.fasta')
-        extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/seq_pattern.fasta', f'{wd}/esm2-t30_embeddings')
+        extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/seq_pattern.fasta', f'{wd}/esm2-t30_embeddings')
         df = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
         df = df.rename(columns={"Entry_ID": "Seq"})
         df11 = df_1.merge(df, on="Seq", how="inner")
         df11.to_csv(f'{wd}/pattern_embeddings_in_order.csv')
-        pred_comb_emb(f'{wd}/pattern_embeddings_in_order.csv', "Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+        pred_comb_emb(f'{wd}/pattern_embeddings_in_order.csv', f"{nf_path}/Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
         class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
         df3 = pd.read_csv(f'{wd}/seq.out')
         df4 = pd.concat([df_1,df3],axis=1)
@@ -855,7 +871,7 @@ elif Job == 3:
         mutants = generate_mutants_from_dataframe(seq, residues, position)
         result_df = pd.DataFrame(mutants, columns=['Original Sequence', 'seq', 'Position'])
         out_len_mut = pd.DataFrame(result_df['seq'])
-        model_save_path = "Model/Peptide/saved_model_t30"
+        model_save_path = f"{nf_path}/Model/Peptide/saved_model_t30"
         tokenizer = AutoTokenizer.from_pretrained(model_save_path)
         model = EsmForSequenceClassification.from_pretrained(model_save_path)
         model.eval()
@@ -898,12 +914,12 @@ elif Job == 3:
         #prediction for original sequence
         ori_Sequence = ori_Sequence.rename(columns={"Original Sequence": "Seq"})
         convert_fasta(ori_Sequence, wd, "ori_Sequence.fasta")
-        extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/ori_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
+        extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/ori_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
         ori_Sequence_embeddings = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
         ori_Sequence_embeddings = ori_Sequence_embeddings.rename(columns={"Entry_ID": "Seq"})
         df11 = ori_Sequence.merge(ori_Sequence_embeddings, on="Seq", how="inner")
         df11.to_csv(f'{wd}/ori_Sequence_embeddings_in_order.csv',  index=False)
-        pred_prot_emb(f'{wd}/ori_Sequence_embeddings_in_order.csv', "Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+        pred_prot_emb(f'{wd}/ori_Sequence_embeddings_in_order.csv', f"{nf_path}/Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
         class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
         df = pd.read_csv(f'{wd}/seq.out')
         df3 = round(df,3)
@@ -914,12 +930,12 @@ elif Job == 3:
         Mut_Sequence = pd.DataFrame(result_df["Mutant Sequence"])
         Mut_Sequence = Mut_Sequence.rename(columns={"Mutant Sequence": "Seq"})
         convert_fasta(Mut_Sequence, wd, "Mut_Sequence.fasta")
-        extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/Mut_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
+        extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/Mut_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
         Mut_Sequence_embeddings = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
         Mut_Sequence_embeddings = Mut_Sequence_embeddings.rename(columns={"Entry_ID": "Seq"})
         df12 = Mut_Sequence.merge(Mut_Sequence_embeddings, on="Seq", how="inner")
         df12.to_csv(f'{wd}/Mut_Sequence_embeddings_in_order.csv',  index=False)
-        pred_prot_emb(f'{wd}/Mut_Sequence_embeddings_in_order.csv', "Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+        pred_prot_emb(f'{wd}/Mut_Sequence_embeddings_in_order.csv', f"{nf_path}/Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
         class_assignment(f'{wd}/seq.pred',Threshold, 'seq.out', wd)
         df = pd.read_csv(f'{wd}/seq.out')
         df33 = round(df,3)
@@ -967,12 +983,12 @@ elif Job == 3:
         #prediction for original sequence
         ori_Sequence = ori_Sequence.rename(columns={"Original Sequence": "Seq"})
         convert_fasta(ori_Sequence, wd, "ori_Sequence.fasta")
-        extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/ori_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
+        extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/ori_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
         ori_Sequence_embeddings = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
         ori_Sequence_embeddings = ori_Sequence_embeddings.rename(columns={"Entry_ID": "Seq"})
         df11 = ori_Sequence.merge(ori_Sequence_embeddings, on="Seq", how="inner")
         df11.to_csv(f'{wd}/ori_Sequence_embeddings_in_order.csv',  index=False)
-        pred_comb_emb(f'{wd}/ori_Sequence_embeddings_in_order.csv', "Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+        pred_comb_emb(f'{wd}/ori_Sequence_embeddings_in_order.csv', f"{nf_path}/Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
         class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
         df = pd.read_csv(f'{wd}/seq.out')
         df3 = round(df,3)
@@ -983,12 +999,12 @@ elif Job == 3:
         Mut_Sequence = pd.DataFrame(result_df["Mutant Sequence"])
         Mut_Sequence = Mut_Sequence.rename(columns={"Mutant Sequence": "Seq"})
         convert_fasta(Mut_Sequence, wd, "Mut_Sequence.fasta")
-        extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/Mut_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
+        extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/Mut_Sequence.fasta', f'{wd}/esm2-t30_embeddings')
         Mut_Sequence_embeddings = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
         Mut_Sequence_embeddings = Mut_Sequence_embeddings.rename(columns={"Entry_ID": "Seq"})
         df12 = Mut_Sequence.merge(Mut_Sequence_embeddings, on="Seq", how="inner")
         df12.to_csv(f'{wd}/Mut_Sequence_embeddings_in_order.csv',  index=False)
-        pred_comb_emb(f'{wd}/Mut_Sequence_embeddings_in_order.csv', "Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+        pred_comb_emb(f'{wd}/Mut_Sequence_embeddings_in_order.csv', f"{nf_path}/Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
         class_assignment(f'{wd}/seq.pred',Threshold, 'seq.out', wd)
         df = pd.read_csv(f'{wd}/seq.out')
         df33 = round(df,3)
@@ -1032,7 +1048,7 @@ elif Job == 4:
             print('\n======= You are using the Design Module for all possible mutants of NTxPred2. Your results will be stored in file: 'f"{wd}/{result_filename}"' =====\n')
             print('==== Predicting Neurotoxic Activity using ESM2-t30 model (peptide dataset): Processing sequences please wait ...')
             # Load the tokenizer and model
-            model_save_path = "Model/Peptide/saved_model_t30"
+            model_save_path = f"{nf_path}/Model/Peptide/saved_model_t30"
             tokenizer = AutoTokenizer.from_pretrained(model_save_path)
             model = EsmForSequenceClassification.from_pretrained(model_save_path)
             model.eval()
@@ -1069,12 +1085,12 @@ elif Job == 4:
             muts = all_mutants(seq, seqid_1)
             muts.to_csv(f'{wd}/muts.csv', index=None, header=None)  
             convert_fasta(muts,wd, "muts.fasta")
-            extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/muts.fasta', f'{wd}/esm2-t30_embeddings')
+            extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/muts.fasta', f'{wd}/esm2-t30_embeddings')
             muts_embeddings = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
             muts_embeddings = muts_embeddings.rename(columns={"Entry_ID": "Seq"})
             df12 = muts.merge(muts_embeddings, on="Seq", how="inner")
             df12.to_csv(f'{wd}/muts_embeddings_in_order.csv',  index=False)
-            pred_prot_emb(f'{wd}/muts_embeddings_in_order.csv', "Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+            pred_prot_emb(f'{wd}/muts_embeddings_in_order.csv', f"{nf_path}/Model/Protein/protein_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
             class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
             df = pd.read_csv(f'{wd}/seq.out')
             df33 = round(df,3)
@@ -1108,12 +1124,12 @@ elif Job == 4:
             muts = all_mutants(seq, seqid_1)
             muts.to_csv(f'{wd}/muts.csv', index=None, header=None)  
             convert_fasta(muts,wd, "muts.fasta")
-            extract_embeddings("Model/saved_esm2_t30_model.pth", f'{wd}/muts.fasta', f'{wd}/esm2-t30_embeddings')
+            extract_embeddings(f"{nf_path}/Model/saved_esm2_t30_model.pth", f'{wd}/muts.fasta', f'{wd}/esm2-t30_embeddings')
             muts_embeddings = embeddings_to_dataframe(f'{wd}/esm2-t30_embeddings', f'{wd}/esm2_embeddings.csv')
             muts_embeddings = muts_embeddings.rename(columns={"Entry_ID": "Seq"})
             df12 = muts.merge(muts_embeddings, on="Seq", how="inner")
             df12.to_csv(f'{wd}/muts_embeddings_in_order.csv',  index=False)
-            pred_comb_emb(f'{wd}/muts_embeddings_in_order.csv', "Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
+            pred_comb_emb(f'{wd}/muts_embeddings_in_order.csv', f"{nf_path}/Model/Combined/combined_dataset_et_model_sk_1_6_0.pkl",f'{wd}/seq.pred')
             class_assignment(f'{wd}/seq.pred', Threshold, 'seq.out', wd)
             df = pd.read_csv(f'{wd}/seq.out')
             df33 = round(df,3)
