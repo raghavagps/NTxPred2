@@ -47,6 +47,7 @@ Additional required packages:
 ```bash
 pip install scikit-learn==1.5.2
 pip install pandas==1.5.3
+pip install numpy==1.25.2
 pip install torch==2.1.0
 pip install transformers==4.34.0
 pip install joblib==1.4.2
