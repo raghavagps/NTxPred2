@@ -41,7 +41,6 @@ NTxPred2 is written in **Python 3** and requires the following dependencies:
 ```bash
 python=3.10.7
 pytorch
-esm=2.0.1
 ```
 Additional required packages:
 ```bash
@@ -52,6 +51,9 @@ pip install torch==2.1.0
 pip install transformers==4.34.0
 pip install joblib==1.4.2
 pip install onnxruntime==1.15.1
+Bio (Biopython): 1.81
+tqdm: 4.64.1
+torch: 2.6.0
 ```
 
 ### 🔹 Installation using environment.yml
