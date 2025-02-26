@@ -2,16 +2,19 @@ name: NTxPred2
 channels:
   - defaults
   - conda-forge
-  - pytorch   # Added PyTorch channel for compatibility
+  - pytorch 
 dependencies:
   - python=3.10.7
-  - pytorch=2.1.0
+  - pytorch=2.6.0
   - scikit-learn=1.5.2
   - numpy=1.25.2
   - pandas=1.5.3
-  - onnxruntime=1.15.1
   - joblib=1.4.2
+  - biopython=1.81
+  - tqdm=4.64.1
   - pip
   - pip:
       - transformers==4.34.0
-      - esm==2.0.1
+      - torchdata 
+      - torchtext 
+      - torchvision 
