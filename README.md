@@ -162,7 +162,6 @@ NTxPred2 supports two formats:
 | **README.md** | This file |
 | **ntxpred2.py** | Python program for classification |
 | **example.fasta** | Example file (FASTA format) |
-| **example.seq** | Example file (Simple format) |
 
 ---
 
