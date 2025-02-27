@@ -956,11 +956,10 @@ def main():
                 seqid_1=muts['Mutant_ID'].tolist()
                 run_esm_model(seq, seqid_1, f"{wd}/{result_filename}", Threshold, model, tokenizer)
                 df13 = pd.read_csv(f"{wd}/{result_filename}")
-                df13.columns = ['MutantID', 'Sequence', 'ESM Score', "Prediction"]
-                seqid = pd.DataFrame(muts["SeqID"])
-                df14 = pd.concat([seqid,df13],axis=1)
-                df14['SeqID'] = df14['SeqID'].str.replace('>','')
-
+                df13 = df13[["ESM Score", "Prediction"]]
+                df14 = pd.concat([muts,df13],axis=1)
+                df14.columns = [ 'SeqID', 'MutantID', 'Sequence', 'ESM Score', "Prediction"]
+                df14["SeqID"] = df14["SeqID"].apply(lambda x: str(x).lstrip(">") if pd.notnull(x) else "")
                 df14.to_csv(f"{wd}/{result_filename}", index=None)
                 if dplay == 1:
                     df14 = df14.loc[df14.Prediction == "Neurotoxic"]
