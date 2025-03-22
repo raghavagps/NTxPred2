@@ -21,7 +21,7 @@ It employs large language model word embeddings as features for predicting neuro
 ---
 ### 🖼️ NTxPred2 Workflow Representation
 ![NTxPred2 Workflow](https://webs.iiitd.edu.in/raghava/ntxpred2/download/NTXPred_flowchart.png)
-
+![NTxPred2 Workflow](https://github.com/raghavagps/NTxPred2/blob/main/NTxPred2.png)
 ## 🛠️ Installation
 
 ### 🔹 PIP Installation
