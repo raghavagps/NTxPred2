@@ -44,7 +44,8 @@ python ntxpred2.py -i example.fasta -o output.csv -m 1 -j 1
 
 ```
 
-## 🛠️ Installation
+## 🛠️ Installation Options
+
 
 ### 🔹 PIP Installation
 To install NTxPred2 via PIP, run:
