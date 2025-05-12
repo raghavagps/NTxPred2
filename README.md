@@ -40,7 +40,7 @@ conda activate NTxPred2
 # Download the model ZIP and extract it in the root directory
 
 # 4. Run prediction on sample input
-python ntxpred2.py -i example.fasta -o output.csv -m 1 -j 1
+python ntxpred2.py -i example.fasta -o output.csv -m 1 -j 1 -wd working_direcotory_path
 
 ```
 
