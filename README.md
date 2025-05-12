@@ -22,6 +22,28 @@ It employs large language model word embeddings as features for predicting neuro
 ### 🖼️ NTxPred2 Workflow Representation
 ![NTxPred2 Workflow](https://github.com/raghavagps/NTxPred2/blob/main/NTxPred2_workflow.png)
 
+## 🧪 Quick Start for Reproducibility
+
+Follow these steps to replicate the core results of our paper:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/raghavagps/ntxpred2.git
+cd ntxpred2
+
+# 2. Set up the environment (conda recommended)
+conda env create -f environment.yml
+conda activate NTxPred2
+
+# 3. Download pre-trained models
+# Visit: https://webs.iiitd.edu.in/raghava/ntxpred2/download.html
+# Download the model ZIP and extract it in the root directory
+
+# 4. Run prediction on sample input
+python ntxpred2.py -i example.fasta -o output.csv -m 1 -j 1
+
+```
+
 ## 🛠️ Installation
 
 ### 🔹 PIP Installation
